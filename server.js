@@ -6,6 +6,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Add this middleware
 
+
 // Import Routes
 const oauthTokenRoutes = require('./routes/oauthToken');
 const accountSummariesRoutes = require('./routes/accountSummaries');

@@ -1,25 +1,50 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/', (req, res) => {
+// List of valid property types from the API
+const propertyTypes = [
+    'PROPERTY_TYPE_UNSPECIFIED',
+    'PROPERTY_TYPE_ORDINARY',
+    'PROPERTY_TYPE_SUBPROPERTY',
+    'PROPERTY_TYPE_ROLLUP',
+];
 
+// Helper function to get a random property type
+function getRandomPropertyType() {
+    return propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
+}
+
+// Mock data for Google Analytics Account Summaries API
+router.get('/', (req, res) => {
     const { pageSize = 50, pageToken = '0' } = req.query;
 
     const pageSizeInt = parseInt(pageSize, 10);
+    const pageTokenInt = parseInt(pageToken, 10);
+
+    // Validate pageSize
     if (isNaN(pageSizeInt) || pageSizeInt < 1 || pageSizeInt > 200) {
         return res.status(400).json({
-            error: 'Invalid pageSize. It must be a number between 1 and 200.',
+            error: {
+                code: 400,
+                message: 'Invalid value for pageSize. Must be between 1 and 200.',
+                status: 'INVALID_ARGUMENT',
+            },
         });
     }
 
-    const pageTokenInt = parseInt(pageToken, 10);
+    // Validate pageToken
     if (isNaN(pageTokenInt) || pageTokenInt < 0) {
         return res.status(400).json({
-            error: 'Invalid pageToken. It must be a non-negative number.',
+            error: {
+                code: 400,
+                message: 'Invalid value for pageToken. Must be a non-negative integer.',
+                status: 'INVALID_ARGUMENT',
+            },
         });
     }
 
-    const totalAccounts = 100;
+    // Mock 100 accounts
+    const totalAccounts = process.env.TOTAL_ACCOUNTS;
     const startIndex = pageTokenInt * pageSizeInt;
     const endIndex = Math.min(startIndex + pageSizeInt, totalAccounts);
 
@@ -30,31 +55,29 @@ router.get('/', (req, res) => {
         });
     }
 
+    // Generate mock account summaries
     const accountSummaries = Array.from({ length: endIndex - startIndex }, (_, i) => {
         const accountId = startIndex + i + 1;
         return {
             name: `accountSummaries/${accountId}`,
             account: `accounts/${accountId}`,
             displayName: `Account ${accountId}`,
-            propertySummaries: [
-                {
-                    property: `properties/${accountId * 10 + 1}`,
-                    displayName: `Property ${accountId * 10 + 1}`,
-                    propertyType: 'PROPERTY_TYPE_UNSPECIFIED',
+            propertySummaries: Array.from({ length: 2 }, (_, j) => {
+                const propertyId = accountId * 10 + (j + 1);
+                return {
+                    property: `properties/${propertyId}`,
+                    displayName: `Property ${propertyId}`,
+                    propertyType: getRandomPropertyType(),
                     parent: `accounts/${accountId}`,
-                },
-                {
-                    property: `properties/${accountId * 10 + 2}`,
-                    displayName: `Property ${accountId * 10 + 2}`,
-                    propertyType: 'PROPERTY_TYPE_UNSPECIFIED',
-                    parent: `accounts/${accountId}`,
-                },
-            ],
+                };
+            }),
         };
     });
 
+    // Calculate nextPageToken
     const nextPageToken = endIndex < totalAccounts ? pageTokenInt + 1 : null;
 
+    // Response
     res.status(200).json({
         accountSummaries,
         nextPageToken: nextPageToken !== null ? nextPageToken.toString() : null,
