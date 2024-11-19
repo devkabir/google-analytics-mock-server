@@ -36,7 +36,7 @@ const generateResponse = (req, res) => {
     }
 
     // Mock Data
-    const totalDataStreams = 500; // Total number of available mock data streams
+    const totalDataStreams = parseInt(process.env.TOTAL_DATA_STREAMS, 10);
     const startIndex = pageTokenInt * pageSizeInt;
     const endIndex = Math.min(startIndex + pageSizeInt, totalDataStreams);
 
@@ -57,16 +57,12 @@ const generateResponse = (req, res) => {
     const dataStreams = Array.from({ length: endIndex - startIndex }, (_, i) => {
         const streamId = startIndex + i + 1;
 
-        const type = i % 3 === 0
-            ? 'WEB_DATA_STREAM'
-            : i % 3 === 1
-                ? 'ANDROID_APP_DATA_STREAM'
-                : 'IOS_APP_DATA_STREAM';
+        const type = 'WEB_DATA_STREAM';
 
         const webStreamData = type === 'WEB_DATA_STREAM'
             ? {
-                measurementId: `G-XXXXXXX${streamId}`,
-                defaultUri: `https://example${streamId}.com`,
+                measurementId: `G-XXXX${propertyId}`,
+                defaultUri: `https://example.com`,
             }
             : null;
 
