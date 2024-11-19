@@ -52,7 +52,7 @@ const generateResponse = (req, res) => {
         }));
 
         const metricValues = metrics.map(() => ({
-            value: `${Math.floor(Math.random() * 1000)}`, // Random metric value
+            value: `${Math.floor(Math.random() * 100)}`, // Random metric value
         }));
 
         rows.push({ dimensionValues, metricValues });
@@ -61,19 +61,19 @@ const generateResponse = (req, res) => {
     // Generate totals, maximums, and minimums if requested
     const totals = metricAggregations?.includes('TOTAL')
         ? metrics.map(() => ({
-            metricValues: [{ value: `${Math.floor(Math.random() * 1000)}` }]
+            metricValues: [{ value: rows.reduce((total, row) => total + parseInt(row.metricValues[0].value, 10), 0) }],
         }))
         : undefined;
 
     const maximums = metricAggregations?.includes('MAXIMUM')
         ? metrics.map(() => ({
-            value: `${Math.floor(Math.random() * 1000)}`, // Mock max value
+            value: rows.reduce((max, row) => Math.max(max, parseInt(row.metricValues[0].value, 10)), 0), // Mock max value
         }))
         : undefined;
 
     const minimums = metricAggregations?.includes('MINIMUM')
-        ? metrics.map(() => ({
-            value: `${Math.floor(Math.random() * 100)}`, // Mock min value
+        ? metrics.map((metric) => ({
+            value: Math.min(...rows.map((row) => parseInt(row.metricValues[0].value, 10))),
         }))
         : undefined;
 

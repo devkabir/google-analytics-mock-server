@@ -18,8 +18,8 @@ const channelGroupingMap = {
     "Affiliates": { sessionMedium: "referral", sessionSource: "facebook" },
     "Referral": { sessionMedium: "referral", sessionSource: "facebook" },
     "Paid Social": { sessionMedium: "cpc", sessionSource: "facebook" },
-    "Organic Social": { sessionMedium: "organic", sessionSource: "twitter" },
-    "Display": { sessionMedium: "social", sessionSource: "linkedin" }
+    "Organic Social": { sessionMedium: "Social", sessionSource: "twitter" },
+    "Display": { sessionMedium: "Social", sessionSource: "linkedin" }
 };
 const channelGroupings = Object.keys(channelGroupingMap);
 const hostnames = ['www.example.com', 'blog.example.com', 'shop.example.com'];
@@ -28,12 +28,16 @@ const pagePaths = ['/', '/about', '/contact', '/products', '/blog'];
 const generateDimensions = (dimensions, dateRange) => {
     const { startDate, endDate } = dateRange;
     const dateArray = [];
+    const dateHourArray = [];
     let currentDate = new Date(startDate);
 
     while (currentDate <= new Date(endDate)) {
         // Format date as YYYYMMDD
         const formattedDate = `${currentDate.getFullYear()}${String(currentDate.getMonth() + 1).padStart(2, '0')}${String(currentDate.getDate()).padStart(2, '0')}`;
         dateArray.push(formattedDate);
+        // Format date as YYYYMMDDHH
+        const formattedDateHour = `${formattedDate}${String(currentDate.getHours()).padStart(2, '0')}`;
+        dateHourArray.push(formattedDateHour);
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -46,9 +50,13 @@ const generateDimensions = (dimensions, dateRange) => {
 
     return dimensions.map((dimension) => {
         switch (dimension.name) {
+            case 'dateHour':
+                return { value: dateHourArray[Math.floor(Math.random() * dateHourArray.length)] };
             case 'sessionMedium':
                 return { value: sessionMedium };
             case 'sessionSource':
+                return { value: sessionSource };
+            case 'sourceMedium':
                 return { value: sessionSource };
             case 'country':
                 return { value: countries[countryIndex].name }; // Random country
@@ -98,21 +106,29 @@ const generateMetrics = (metrics) =>
     });
 
 const generateMockData = (dateRanges, metrics, dimensions) => {
+    const allData = []; // Accumulate data across all date ranges
 
-    const data = [];
+    dateRanges.forEach(({ startDate, endDate }) => {
+        const currentDate = new Date(startDate);
+        const rangeData = []; // Data for this specific date range
 
-    dateRanges.forEach((dateRange) => {
-        // Generate rows based on dimensions
-        const row = {
-            dimensionValues: generateDimensions(dimensions, dateRange),
-            metricValues: generateMetrics(metrics)
-        };
+        while (currentDate <= new Date(endDate)) {
+            // Generate rows based on dimensions and metrics
+            const row = {
+                dimensionValues: generateDimensions(dimensions, { startDate, endDate }),
+                metricValues: generateMetrics(metrics)
+            };
 
-        data.push(row);
+            rangeData.push(row); // Add the row to the current range
+            currentDate.setDate(currentDate.getDate() + 1); // Move to the next date
+        }
+
+        allData.push(...rangeData); // Add the current range's data to the overall data
     });
 
-    return data;
+    return allData; // Return accumulated data across all date ranges
 };
+
 
 const generateMetricHeader = (metrics) => {
     const metricHeader = {
