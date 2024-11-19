@@ -1,5 +1,6 @@
 const express = require('express');
-const router = express.Router();
+const { batchRunReports } = require('./batchRunReports');
+const router = express.Router({ mergeParams: true });
 
 // Helper function to generate random dates
 const generateRandomDate = (start, end) => {
@@ -8,7 +9,7 @@ const generateRandomDate = (start, end) => {
 };
 
 // Route to handle GET /v1beta/properties/:propertyId/dataStreams
-router.get('/v1beta/properties/:propertyId/dataStreams', (req, res) => {
+router.get('/dataStreams', (req, res) => {
     const { propertyId } = req.params;
     const { pageSize = 50, pageToken = '0' } = req.query;
 
@@ -105,5 +106,4 @@ router.get('/v1beta/properties/:propertyId/dataStreams', (req, res) => {
         nextPageToken,
     });
 });
-
 module.exports = router;

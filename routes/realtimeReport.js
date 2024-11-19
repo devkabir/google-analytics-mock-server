@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-router.post('/v1beta/properties/:propertyId:runRealtimeReport', (req, res) => {
+router.post(/\/(\d+):runRealtimeReport$/, (req, res) => {
     console.log('Headers:', req.headers);
     console.log('Body:', req.body);
 
