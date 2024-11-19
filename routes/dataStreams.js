@@ -8,8 +8,7 @@ const generateRandomDate = (start, end) => {
     return date.toISOString();
 };
 
-// Route to handle GET /v1beta/properties/:propertyId/dataStreams
-router.get('/dataStreams', (req, res) => {
+const generateResponse = (req, res) => {
     const { propertyId } = req.params;
     const { pageSize = 50, pageToken = '0' } = req.query;
 
@@ -105,5 +104,8 @@ router.get('/dataStreams', (req, res) => {
         dataStreams,
         nextPageToken,
     });
-});
+}
+
+// Route to handle GET /v1beta/properties/:propertyId/dataStreams
+router.get('/dataStreams', generateResponse);
 module.exports = router;

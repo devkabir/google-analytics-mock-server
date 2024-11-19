@@ -43,8 +43,30 @@ router.get('/', (req, res) => {
         });
     }
 
-    // Mock 100 accounts
-    const totalAccounts = process.env.TOTAL_ACCOUNTS;
+    // Retrieve the total number of accounts and properties per account from environment variables
+    const totalAccounts = parseInt(process.env.TOTAL_ACCOUNTS, 10);
+    const propertiesPerAccount = parseInt(process.env.PROPERTIES_PER_ACCOUNT, 10);
+
+    if (isNaN(totalAccounts) || totalAccounts < 1) {
+        return res.status(500).json({
+            error: {
+                code: 500,
+                message: 'Invalid TOTAL_ACCOUNTS environment variable. Must be a positive integer.',
+                status: 'INTERNAL_ERROR',
+            },
+        });
+    }
+
+    if (isNaN(propertiesPerAccount) || propertiesPerAccount < 1) {
+        return res.status(500).json({
+            error: {
+                code: 500,
+                message: 'Invalid PROPERTIES_PER_ACCOUNT environment variable. Must be a positive integer.' + propertiesPerAccount,
+                status: 'INTERNAL_ERROR',
+            },
+        });
+    }
+
     const startIndex = pageTokenInt * pageSizeInt;
     const endIndex = Math.min(startIndex + pageSizeInt, totalAccounts);
 
@@ -62,8 +84,8 @@ router.get('/', (req, res) => {
             name: `accountSummaries/${accountId}`,
             account: `accounts/${accountId}`,
             displayName: `Account ${accountId}`,
-            propertySummaries: Array.from({ length: 2 }, (_, j) => {
-                const propertyId = accountId * 10 + (j + 1);
+            propertySummaries: Array.from({ length: propertiesPerAccount }, (_, j) => {
+                const propertyId = accountId * 1000 + (j + 1); // Unique property ID for each property
                 return {
                     property: `properties/${propertyId}`,
                     displayName: `Property ${propertyId}`,
