@@ -16,6 +16,7 @@ const batchRunReportsRoutes = require('./routes/batchRunReports');
 const realtimeReportRoutes = require('./routes/realtimeReport');
 
 // Use Routes
+app.get('/', (req, res) => res.send('Hello from the Google Analytics Mock API Server!'));
 app.post('/token', oauthTokenRoutes);
 app.use('/v1beta/accountSummaries', accountSummariesRoutes);
 app.use('/analytics', analyticsProfilesRoutes);
