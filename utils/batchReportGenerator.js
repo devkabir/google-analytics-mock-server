@@ -142,37 +142,37 @@ const combineRows = (rows) => {
 const generateMockData = (dateRanges, metrics, dimensions) => {
     const allData = []; // Accumulate data across all date ranges
 
-    dateRanges.forEach(({ startDate, endDate }) => {
-        const currentDate = new Date(startDate);
+    dateRanges.forEach(({ startDate, endDate }, index) => {
         const rangeData = []; // Data for this specific date range
-
-        while (currentDate <= new Date(endDate)) {
-            // Generate rows based on dimensions and metrics
-            const row = {
-                dimensionValues: generateDimensions(dimensions, { startDate, endDate }),
-                metricValues: generateMetrics(metrics),
+        if (dimensions.length === 0) {
+            const rangeRow = {
+                "dimensionValues": [
+                    {
+                        "value": `date_range_${index}`
+                    }
+                ],
+                "metricValues": generateMetrics(metrics)
             };
+            allData.push(rangeRow);
+        } else {
+            const currentDate = new Date(startDate);
+            while (currentDate <= new Date(endDate)) {
+                // Generate rows based on dimensions and metrics
+                const row = {
+                    dimensionValues: generateDimensions(dimensions, { startDate, endDate }),
+                    metricValues: generateMetrics(metrics),
+                };
 
-            rangeData.push(row); // Add the row to the current range
-            currentDate.setDate(currentDate.getDate() + 1); // Move to the next date
+                rangeData.push(row); // Add the row to the current range
+                currentDate.setDate(currentDate.getDate() + 1); // Move to the next date
+            }
+            allData.push(...rangeData); // Add the current range's data to the overall data
         }
-
-        allData.push(...rangeData); // Add the current range's data to the overall data
     });
 
     return allData; // Return accumulated data across all date ranges
 };
 
-const generateMetricHeader = (metrics) => {
-    const metricHeader = {
-        metricHeaderEntries: metrics.map((metric) => ({
-            name: metric.name,
-            type: "FLOAT", // Assuming all metrics are of type FLOAT; adjust if needed
-        })),
-    };
-
-    return metricHeader;
-};
 const generateResponse = ({ propertyId, requests }) => {
     // Validate input
     if (!requests || !Array.isArray(requests)) {
@@ -190,17 +190,23 @@ const generateResponse = ({ propertyId, requests }) => {
         } = request;
         const rows = generateMockData(dateRanges, metrics, dimensions);
         return {
-            dimensionHeaders: dimensions
+            dimensionHeaders: dimensions.length
                 ? dimensions.map((dimension) => ({ name: dimension.name }))
-                : [],
+                : [
+                    {
+                        name: "dateRange",
+                    },
+                ],
             metricHeaders: metrics.map((metric) => ({
                 name: metric.name,
                 type: "INTEGER",
             })),
             rows: combineRows(rows),
             rowCount: rows.length,
-            metadata: {},
-            propertyQuota: {},
+            metadata: {
+                currencyCode: "USD",
+                timeZone: "America/Detroit",
+            },
             kind: "analyticsData#runReport",
         };
     });
