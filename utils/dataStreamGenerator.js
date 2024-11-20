@@ -1,6 +1,3 @@
-const express = require('express');
-const { batchRunReports } = require('./batchRunReports');
-const router = express.Router({ mergeParams: true });
 
 // Helper function to generate random dates
 const generateRandomDate = (start, end) => {
@@ -8,31 +5,29 @@ const generateRandomDate = (start, end) => {
     return date.toISOString();
 };
 
-const generateResponse = (req, res) => {
-    const { propertyId } = req.params;
-    const { pageSize = 50, pageToken = '0' } = req.query;
+const generateResponse = ({ propertyId, pageSize, pageToken }) => {
 
     // Validate propertyId
     if (!propertyId || isNaN(propertyId)) {
-        return res.status(400).json({
+        return {
             error: 'Invalid propertyId. It must be a valid number.',
-        });
+        };
     }
 
     // Validate pageSize
     const pageSizeInt = parseInt(pageSize, 10);
     if (isNaN(pageSizeInt) || pageSizeInt < 1 || pageSizeInt > 200) {
-        return res.status(400).json({
+        return {
             error: 'Invalid pageSize. It must be a number between 1 and 200.',
-        });
+        };
     }
 
     // Validate pageToken
     const pageTokenInt = parseInt(pageToken, 10);
     if (isNaN(pageTokenInt) || pageTokenInt < 0) {
-        return res.status(400).json({
+        return {
             error: 'Invalid pageToken. It must be a non-negative number.',
-        });
+        };
     }
 
     // Mock Data
@@ -96,12 +91,10 @@ const generateResponse = (req, res) => {
     const nextPageToken = endIndex < totalDataStreams ? (pageTokenInt + 1).toString() : null;
 
     // Respond with mock data
-    res.status(200).json({
+    return {
         dataStreams,
         nextPageToken,
-    });
+    };
 }
 
-// Route to handle GET /v1beta/properties/:propertyId/dataStreams
-router.get('/dataStreams', generateResponse);
-module.exports = router;
+module.exports = generateResponse

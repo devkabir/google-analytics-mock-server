@@ -1,31 +1,23 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const PORT = 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Add this middleware
+app.use(express.urlencoded({ extended: true }));
 
+// Routes
+const UserRoutes = require("./routes/user.js");
+const AnalyticsRoutes = require("./routes/analytics.js");
+const PropertyRoutes = require("./routes/property.js");
 
-// Import Routes
-const oauthTokenRoutes = require('./routes/oauthToken');
-const accountSummariesRoutes = require('./routes/accountSummaries');
-const analyticsProfilesRoutes = require('./routes/analyticsProfiles');
-const dataStreamsRoutes = require('./routes/dataStreams');
-const batchRunReportsRoutes = require('./routes/batchRunReports');
-const realtimeReportRoutes = require('./routes/realtimeReport');
+app.get("/", (req, res) => res.status(200).json({ message: "Hello World!" }));
 
-// Use Routes
-app.get('/', (req, res) => res.send('Hello from the Google Analytics Mock API Server!'));
-app.post('/token', oauthTokenRoutes);
-app.use('/v1beta/accountSummaries', accountSummariesRoutes);
-app.use('/analytics', analyticsProfilesRoutes);
-app.use('/v1beta/properties/', batchRunReportsRoutes);
-app.use('/v1beta/properties/', realtimeReportRoutes);
-app.use('/v1beta/properties/:propertyId', dataStreamsRoutes);
-
+UserRoutes.handle(app);
+AnalyticsRoutes.handle(app);
+PropertyRoutes.handle(app);
 
 // Start the Server
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

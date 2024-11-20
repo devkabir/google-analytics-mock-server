@@ -1,6 +1,3 @@
-const express = require('express');
-const router = express.Router();
-
 // Helper to generate a dynamic profile
 const generateProfile = (accountId, webPropertyId, profileId, index) => {
     const date = new Date();
@@ -35,34 +32,39 @@ const generateProfile = (accountId, webPropertyId, profileId, index) => {
 };
 
 // Route to generate dynamic profiles
-router.get('/v3/management/accounts/:accountId/webproperties/:webPropertyId/profiles', (req, res) => {
-    const { accountId, webPropertyId } = req.params;
-
+const handle = ({ accountId, webPropertyId, itemsPerPage, startIndex }) => {
+    if (!accountId || !webPropertyId) {
+        return {
+            error: {
+                code: 400,
+                message: "Missing required parameters: accountId and webPropertyId.",
+                status: "INVALID_ARGUMENT",
+            },
+        };
+    }
     // Dynamic parameters
-    const itemsPerPage = parseInt(req.query.itemsPerPage || "25", 10);
-    const startIndex = parseInt(req.query.startIndex || "1", 10);
     const totalProfiles = parseInt(process.env.TOTAL_PROFILES, 10);
 
     // Validate environment variable
     if (isNaN(totalProfiles) || totalProfiles < 1) {
-        return res.status(500).json({
+        return {
             error: {
                 code: 500,
                 message: "Invalid TOTAL_PROFILES environment variable. Must be a positive integer.",
                 status: "INTERNAL_ERROR",
             },
-        });
+        };
     }
 
     // Validate query parameters
     if (isNaN(itemsPerPage) || isNaN(startIndex) || itemsPerPage <= 0 || startIndex <= 0) {
-        return res.status(400).json({
+        return {
             error: {
                 code: 400,
                 message: "Invalid itemsPerPage or startIndex query parameters.",
                 status: "INVALID_ARGUMENT",
             },
-        });
+        };
     }
 
     // Generate mock profiles
@@ -75,7 +77,7 @@ router.get('/v3/management/accounts/:accountId/webproperties/:webPropertyId/prof
     const nextStartIndex = startIndex + itemsPerPage <= totalProfiles ? startIndex + itemsPerPage : null;
     const previousStartIndex = startIndex > 1 ? Math.max(1, startIndex - itemsPerPage) : null;
 
-    res.status(200).json({
+    return {
         items: profiles,
         itemsPerPage,
         totalResults: totalProfiles,
@@ -86,7 +88,7 @@ router.get('/v3/management/accounts/:accountId/webproperties/:webPropertyId/prof
         nextLink: nextStartIndex
             ? `/v3/management/accounts/${accountId}/webproperties/${webPropertyId}/profiles?itemsPerPage=${itemsPerPage}&startIndex=${nextStartIndex}`
             : null,
-    });
-});
+    };
+};
 
-module.exports = router;
+module.exports = handle;

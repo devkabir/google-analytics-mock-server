@@ -1,15 +1,9 @@
-const express = require('express');
-const router = express.Router();
-
-const generateResponse = (req, res) => {
-    const { propertyId } = req.params;
-    const { metricAggregations, metrics, dimensions, limit = 10 } = req.body;
-
+const generateResponse = ({ propertyId, metricAggregations, metrics, dimensions, limit = 10 }) => {
     // Validate request body
     if (!metrics || !dimensions) {
-        return res.status(400).json({
+        return {
             error: 'Metrics and dimensions are required in the request body.',
-        });
+        };
     }
 
     // Predefined realistic values for specific dimensions
@@ -86,7 +80,7 @@ const generateResponse = (req, res) => {
         : undefined;
 
     // Build the response object
-    const mockRealtimeReportResponse = {
+    return {
         dimensionHeaders: dimensions.map((dimension) => ({
             name: dimension.name,
         })),
@@ -101,15 +95,6 @@ const generateResponse = (req, res) => {
         rowCount: rows.length,
         propertyQuota,
     };
-
-    // Send response
-    res.status(200).json(mockRealtimeReportResponse);
 };
 
-
-
-
-
-router.post(/\/(\d+):runRealtimeReport$/, generateResponse);
-
-module.exports = router;
+module.exports = generateResponse;

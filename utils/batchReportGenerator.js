@@ -1,5 +1,3 @@
-const express = require("express");
-const router = express.Router({ mergeParams: true });
 const countries = [
     { name: "United States", id: "US" },
     { name: "Canada", id: "CA" },
@@ -175,13 +173,10 @@ const generateMetricHeader = (metrics) => {
 
     return metricHeader;
 };
-const generateResponse = (req, res) => {
-    const { propertyId } = req.params;
-    const { requests } = req.body;
-
+const generateResponse = ({ propertyId, requests }) => {
     // Validate input
     if (!requests || !Array.isArray(requests)) {
-        return res.status(400).json({ error: "Invalid request payload" });
+        return { error: "Invalid request payload" };
     }
     // Generate reports dynamically
     const reports = requests.map((request) => {
@@ -211,13 +206,10 @@ const generateResponse = (req, res) => {
     });
 
     // Respond with dynamically generated reports
-    res.status(200).json({
+    return {
         reports,
         kind: "analyticsData#batchRunReports",
-    });
+    };
 };
 
-// POST /v1beta/properties/:propertyId:batchRunReports
-router.post(/\/(\d+):batchRunReports$/, generateResponse);
-
-module.exports = router;
+module.exports = generateResponse;
