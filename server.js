@@ -2,20 +2,16 @@ const express = require("express");
 const app = express();
 const PORT = 3000;
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 // Routes
 const UserRoutes = require("./routes/user.js");
 const AnalyticsRoutes = require("./routes/analytics.js");
 const PropertyRoutes = require("./routes/property.js");
-
+const BatchRoutes = require("./routes/batch.js");
 app.get("/", (req, res) => res.status(200).json({ message: "Hello World!" }));
-
 UserRoutes.handle(app);
 AnalyticsRoutes.handle(app);
 PropertyRoutes.handle(app);
+BatchRoutes.handle(app);
 
 // Start the Server
 app.listen(PORT, () => {

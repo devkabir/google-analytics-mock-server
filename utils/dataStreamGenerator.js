@@ -56,7 +56,7 @@ const generateResponse = ({ propertyId, pageSize, pageToken }) => {
 
         const webStreamData = type === 'WEB_DATA_STREAM'
             ? {
-                measurementId: `G-XXXX${propertyId}`,
+                measurementId: `G-${Math.floor(1000 + Math.random() * 9000)}${propertyId}`,
                 defaultUri: `https://example.com`,
             }
             : null;
