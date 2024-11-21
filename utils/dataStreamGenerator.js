@@ -14,26 +14,31 @@ const generateResponse = ({ propertyId, pageSize, pageToken }) => {
         };
     }
 
-    // Validate pageSize
-    const pageSizeInt = parseInt(pageSize, 10);
-    if (isNaN(pageSizeInt) || pageSizeInt < 1 || pageSizeInt > 200) {
-        return {
-            error: 'Invalid pageSize. It must be a number between 1 and 200.',
-        };
-    }
-
-    // Validate pageToken
-    const pageTokenInt = parseInt(pageToken, 10);
-    if (isNaN(pageTokenInt) || pageTokenInt < 0) {
-        return {
-            error: 'Invalid pageToken. It must be a non-negative number.',
-        };
-    }
 
     // Mock Data
     const totalDataStreams = parseInt(process.env.TOTAL_DATA_STREAMS, 10);
-    const startIndex = pageTokenInt * pageSizeInt;
-    const endIndex = Math.min(startIndex + pageSizeInt, totalDataStreams);
+    let startIndex = 0;
+    let endIndex = totalDataStreams;
+    if (pageSize && pageToken) {
+        // Validate pageSize
+        const pageSizeInt = parseInt(pageSize, 10);
+        if (isNaN(pageSizeInt) || pageSizeInt < 1 || pageSizeInt > 200) {
+            return {
+                error: 'Invalid pageSize. It must be a number between 1 and 200.',
+            };
+        }
+
+        // Validate pageToken
+        const pageTokenInt = parseInt(pageToken, 10);
+        if (isNaN(pageTokenInt) || pageTokenInt < 0) {
+            return {
+                error: 'Invalid pageToken. It must be a non-negative number.',
+            };
+        }
+        startIndex = pageTokenInt * pageSizeInt;
+        endIndex = Math.min(startIndex + pageSizeInt, totalDataStreams);
+    }
+
 
     // Return empty if out of range
     if (startIndex >= totalDataStreams) {
@@ -86,15 +91,21 @@ const generateResponse = ({ propertyId, pageSize, pageToken }) => {
             iosAppStreamData,
         };
     });
+    if (pageSize && pageToken) {
+        // Calculate next page token
+        const nextPageToken = endIndex < totalDataStreams ? (pageTokenInt + 1).toString() : null;
 
-    // Calculate next page token
-    const nextPageToken = endIndex < totalDataStreams ? (pageTokenInt + 1).toString() : null;
+        // Respond with mock data
+        return {
+            dataStreams,
+            nextPageToken,
+        };
+    } else {
+        return {
+            dataStreams,
+        };
+    }
 
-    // Respond with mock data
-    return {
-        dataStreams,
-        nextPageToken,
-    };
 }
 
 module.exports = generateResponse
