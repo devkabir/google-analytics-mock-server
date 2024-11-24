@@ -1,4 +1,5 @@
 const express = require("express");
+var cors = require('cors')
 const app = express();
 const PORT = 3000;
 
@@ -7,7 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/batch', express.raw({ type: 'multipart/mixed', limit: '10mb' }));
 app.use('/batch', express.raw({ type: 'application/http', limit: '10mb' }));
-
+app.use(cors())
 // Routes
 const UserRoutes = require("./routes/user.js");
 const AnalyticsRoutes = require("./routes/analytics.js");
