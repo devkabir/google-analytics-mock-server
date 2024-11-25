@@ -1,101 +1,167 @@
-// Mock data for Google Analytics Account Summaries API
-const handle = (query) => {
-    const { pageSize = 50, pageToken = "0" } = query;
+const { encodeIntToUUID, decodeUUIDToInt } = require("./uuidEncoder");
 
-    const pageSizeInt = parseInt(pageSize, 10);
-    const pageTokenInt = parseInt(pageToken, 10);
+const handle = (query, type) => {
+  const { pageSize = 50, pageToken = "" } = query;
 
-    // Validate pageSize
-    if (isNaN(pageSizeInt) || pageSizeInt < 1 || pageSizeInt > 200) {
-        return res.status(400).json({
-            error: {
-                code: 400,
-                message: "Invalid value for pageSize. Must be between 1 and 200.",
-                status: "INVALID_ARGUMENT",
-            },
-        });
-    }
+  const pageSizeInt = parseInt(pageSize, 10);
+  let pageTokenInt = 0;
+  if (pageToken !== "") {
+    pageTokenInt = parseInt(decodeUUIDToInt(pageToken), 10);
+  }
 
-    // Validate pageToken
-    if (isNaN(pageTokenInt) || pageTokenInt < 0) {
-        return res.status(400).json({
-            error: {
-                code: 400,
-                message: "Invalid value for pageToken. Must be a non-negative integer.",
-                status: "INVALID_ARGUMENT",
-            },
-        });
-    }
+  // Validate pageSize
+  if (isNaN(pageSizeInt) || pageSizeInt < 1 || pageSizeInt > 200) {
+    return {
+      error: {
+        code: 400,
+        message: "Invalid value for pageSize. Must be between 1 and 200.",
+        status: "INVALID_ARGUMENT",
+      },
+    };
+  }
 
-    // Retrieve the total number of accounts and properties per account from environment variables
-    const totalAccounts = parseInt(process.env.TOTAL_ACCOUNTS, 10);
-    const propertiesPerAccount = parseInt(process.env.PROPERTIES_PER_ACCOUNT, 10);
+  // Validate pageToken
+  if (isNaN(pageTokenInt) || pageTokenInt < 0) {
+    return {
+      error: {
+        code: 400,
+        message:
+          "Invalid value for pageToken. Must be a non-negative integer. parsed value: " +
+          pageTokenInt,
+        status: "INVALID_ARGUMENT",
+        data: {
+          parsedValue: pageTokenInt,
+          token: pageToken,
+        },
+      },
+    };
+  }
 
-    if (isNaN(totalAccounts) || totalAccounts < 1) {
-        return res.status(500).json({
-            error: {
-                code: 500,
-                message:
-                    "Invalid TOTAL_ACCOUNTS environment variable. Must be a positive integer.",
-                status: "INTERNAL_ERROR",
-            },
-        });
-    }
+  // Retrieve the total number of accounts and properties per account from environment variables
+  const totalAccounts = parseInt(process.env.TOTAL_ACCOUNTS, 10);
+  const propertiesPerAccount = parseInt(process.env.PROPERTIES_PER_ACCOUNT, 10);
 
-    if (isNaN(propertiesPerAccount) || propertiesPerAccount < 1) {
-        return res.status(500).json({
-            error: {
-                code: 500,
-                message:
-                    "Invalid PROPERTIES_PER_ACCOUNT environment variable. Must be a positive integer." +
-                    propertiesPerAccount,
-                status: "INTERNAL_ERROR",
-            },
-        });
-    }
+  if (isNaN(totalAccounts) || totalAccounts < 1) {
+    return {
+      error: {
+        code: 500,
+        message:
+          "Invalid TOTAL_ACCOUNTS environment variable. Must be a positive integer.",
+        status: "INTERNAL_ERROR",
+      },
+    };
+  }
 
-    const startIndex = pageTokenInt * pageSizeInt;
+  if (isNaN(propertiesPerAccount) || propertiesPerAccount < 1) {
+    return {
+      error: {
+        code: 500,
+        message:
+          "Invalid PROPERTIES_PER_ACCOUNT environment variable. Must be a positive integer.",
+        status: "INTERNAL_ERROR",
+      },
+    };
+  }
+  const startIndex = pageTokenInt * pageSizeInt;
+  // Calculate nextPageToken
+  let response;
+
+  if (type === "accounts") {
     const endIndex = Math.min(startIndex + pageSizeInt, totalAccounts);
-
-    if (startIndex >= totalAccounts) {
-        return res.status(200).json({
-            accountSummaries: [],
-            nextPageToken: null,
-        });
-    }
-
-    // Generate mock account summaries
-    const accountSummaries = Array.from(
-        { length: endIndex - startIndex },
-        (_, i) => {
-            const accountId = startIndex + i + 1;
-            return {
-                name: `accountSummaries/${accountId}`,
-                account: `accounts/${accountId}`,
-                displayName: `Account ${accountId}`,
-                propertySummaries: Array.from(
-                    { length: propertiesPerAccount },
-                    (_, j) => {
-                        const propertyId = accountId * 1000 + (j + 1); // Unique property ID for each property
-                        return {
-                            property: `properties/${propertyId}`,
-                            displayName: `Property ${propertyId}`,
-                            propertyType: "PROPERTY_TYPE_ORDINARY",
-                            parent: `accounts/${accountId}`,
-                        };
-                    }
-                ),
-            };
-        }
-    );
-
-    // Calculate nextPageToken
     const nextPageToken = endIndex < totalAccounts ? pageTokenInt + 1 : null;
 
-    // Response
+    if (startIndex >= totalAccounts) {
+      return {
+        accounts: [],
+        nextPageToken: null,
+      };
+    }
+
+    // Generate mock accounts
+    response = Array.from({ length: endIndex - startIndex }, (_, i) => {
+      const accountId = startIndex + i + 1;
+      return {
+        name: `accounts/${accountId}`,
+        createTime: new Date().toISOString(),
+        updateTime: new Date().toISOString(),
+        displayName: `Account ${accountId}`,
+        regionCode: "US",
+        deleted: false,
+        gmpOrganization: accountId.toString(),
+      };
+    });
     return {
-        accountSummaries,
-        nextPageToken: nextPageToken !== null ? nextPageToken.toString() : null,
+      accounts: response,
+      nextPageToken:
+        nextPageToken !== null ? encodeIntToUUID(nextPageToken) : null,
     };
+  }
+
+  if (type === "properties") {
+    const endIndex = Math.min(startIndex + pageSizeInt, propertiesPerAccount);
+    const nextPageToken =
+      endIndex < propertiesPerAccount ? pageTokenInt + 1 : null;
+
+    if (startIndex >= propertiesPerAccount) {
+      return {
+        properties: [],
+        nextPageToken: null,
+      };
+    }
+    const accountId = parseInt(query.filter.split("/")[1]) || 1;
+
+    // Generate mock properties
+    response = Array.from({ length: endIndex - startIndex }, (_, i) => {
+        const propertyId = startIndex + i + 1;
+        return {
+          property: `properties/${propertyId}`,
+          displayName: `Property ${propertyId}`,
+          propertyType: "PROPERTY_TYPE_ORDINARY",
+          parent: `accounts/${accountId}`,
+        };
+      }
+    );
+    return {
+      properties: response,
+      nextPageToken:
+        nextPageToken !== null ? encodeIntToUUID(nextPageToken) : null,
+    };
+  }
+  if (startIndex >= totalAccounts) {
+    return {
+      accountSummaries: [],
+      nextPageToken: null,
+    };
+  }
+
+  // Generate mock account summaries
+  response = Array.from({ length: endIndex - startIndex }, (_, i) => {
+    const accountId = startIndex + i + 1;
+    return {
+      name: `accountSummaries/${accountId}`,
+      account: `accounts/${accountId}`,
+      displayName: `Account ${accountId}`,
+      propertySummaries: Array.from(
+        { length: propertiesPerAccount },
+        (_, j) => {
+          const propertyId = accountId * 1000 + (j + 1); // Unique property ID for each property
+          return {
+            property: `properties/${propertyId}`,
+            displayName: `Property ${propertyId}`,
+            propertyType: "PROPERTY_TYPE_ORDINARY",
+            parent: `accounts/${accountId}`,
+          };
+        }
+      ),
+    };
+  });
+
+  // Response
+  return {
+    response,
+    nextPageToken:
+      nextPageToken !== null ? encodeIntToUUID(nextPageToken) : null,
+  };
 };
+
 module.exports = handle;

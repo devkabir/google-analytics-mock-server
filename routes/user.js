@@ -95,8 +95,10 @@ exports.handle = function (app) {
       resourceName: "people/1234567890",
     });
   });
-
+  app.get("/v1beta/accounts", (req, res) => {
+    return res.status(200).json(AccountGenerator(req.query, 'accounts'));
+  })
   app.get("/v1beta/accountSummaries", (req, res) => {
-    return res.status(200).json(AccountGenerator(req.query));
+    return res.status(200).json(AccountGenerator(req.query, 'summaries'));
   });
 };
