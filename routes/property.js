@@ -8,7 +8,7 @@ exports.handle = function (app) {
   });
   app.get("/v1beta/properties/:propertyId/dataStreams", (req, res) => {
     const { propertyId } = req.params;
-    const { pageSize = 50, pageToken = "0" } = req.query;
+    const { pageSize = 50, pageToken = "" } = req.query;
     return res
       .status(200)
       .json(StreamGenerator({ propertyId, pageSize, pageToken }));

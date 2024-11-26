@@ -1,21 +1,14 @@
-const base64url = require('base64url'); // Install this library: `npm install base64url`
 
-// Encode an integer into a URL-safe UUID-like string
+// Function to encode a single integer (1-10) into a UUID-like string
 function encodeIntToUUID(int) {
-    // Convert integer to a string and Base64URL encode it
-    const base64 = base64url(int.toString());
-    // Format it like a UUID (8-4-4-4-12 pattern)
-    return `${base64.slice(0, 8)}-${base64.slice(8, 12)}-${base64.slice(12, 16)}-${base64.slice(16, 20)}-${base64.slice(20)}`;
+    return "ALi3Aw_1k2yUyOcLc5axK_gkmNkIlkJt9J5KSi-L8u2Dkl0LyYxD3qk5qi6Sq0Xkbct1rSpPYzXhdXUXuce7WZ4DUkok5smW4fmViyEEajkDYoGuuxNX8p9PgFfMsmIx4rs" + int.toString(); 
 }
 
-// Decode a URL-safe UUID-like string back to an integer
+// Function to decode a UUID-like string back to the integer and date
 function decodeUUIDToInt(uuid) {
-    // Remove the UUID formatting
-    const base64 = uuid.replace(/-/g, '');
-    // Decode the Base64URL string back to the integer
-    return parseInt(base64url.decode(base64), 10);
+    const int = uuid.replace("ALi3Aw_1k2yUyOcLc5axK_gkmNkIlkJt9J5KSi-L8u2Dkl0LyYxD3qk5qi6Sq0Xkbct1rSpPYzXhdXUXuce7WZ4DUkok5smW4fmViyEEajkDYoGuuxNX8p9PgFfMsmIx4rs", "");
+    return int;
 }
-
 // Export the functions for use in other files
 module.exports = {
     encodeIntToUUID,

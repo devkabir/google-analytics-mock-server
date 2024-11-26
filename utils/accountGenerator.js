@@ -90,11 +90,13 @@ const handle = (query, type) => {
         gmpOrganization: accountId.toString(),
       };
     });
-    return {
+    const result = {
       accounts: response,
-      nextPageToken:
-        nextPageToken !== null ? encodeIntToUUID(nextPageToken) : null,
     };
+    if (nextPageToken !== null) {
+      result.nextPageToken = encodeIntToUUID(nextPageToken);
+    }
+    return result;
   }
 
   if (type === "properties") {
@@ -112,14 +114,14 @@ const handle = (query, type) => {
 
     // Generate mock properties
     response = Array.from({ length: endIndex - startIndex }, (_, i) => {
-        const propertyId = startIndex + i + 1;
-        return {
-          property: `properties/${propertyId}`,
-          displayName: `Property ${propertyId}`,
-          propertyType: "PROPERTY_TYPE_ORDINARY",
-          parent: `accounts/${accountId}`,
-        };
-      }
+      const propertyId = startIndex + i + 1;
+      return {
+        name: `properties/${propertyId}`,
+        displayName: `Property ${accountId}-${propertyId}`,
+        propertyType: "PROPERTY_TYPE_ORDINARY",
+        parent: `accounts/${accountId}`,
+      };
+    }
     );
     return {
       properties: response,
@@ -127,6 +129,7 @@ const handle = (query, type) => {
         nextPageToken !== null ? encodeIntToUUID(nextPageToken) : null,
     };
   }
+
   if (startIndex >= totalAccounts) {
     return {
       accountSummaries: [],
@@ -134,6 +137,8 @@ const handle = (query, type) => {
     };
   }
 
+  const endIndex = Math.min(startIndex + pageSizeInt, totalAccounts);
+  const nextPageToken = endIndex < totalAccounts ? pageTokenInt + 1 : null;
   // Generate mock account summaries
   response = Array.from({ length: endIndex - startIndex }, (_, i) => {
     const accountId = startIndex + i + 1;
@@ -147,7 +152,7 @@ const handle = (query, type) => {
           const propertyId = accountId * 1000 + (j + 1); // Unique property ID for each property
           return {
             property: `properties/${propertyId}`,
-            displayName: `Property ${propertyId}`,
+            displayName: `Property ${accountId}-${propertyId}`,
             propertyType: "PROPERTY_TYPE_ORDINARY",
             parent: `accounts/${accountId}`,
           };
