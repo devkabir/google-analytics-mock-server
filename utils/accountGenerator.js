@@ -116,8 +116,8 @@ const handle = (query, type) => {
     response = Array.from({ length: endIndex - startIndex }, (_, i) => {
       const propertyId = startIndex + i + 1;
       return {
-        name: `properties/${propertyId}`,
-        displayName: `Property ${accountId}-${propertyId}`,
+        name: `properties/${accountId}${propertyId}`,
+        displayName: `#${propertyId} Property of Account ${accountId}`,
         propertyType: "PROPERTY_TYPE_ORDINARY",
         parent: `accounts/${accountId}`,
       };

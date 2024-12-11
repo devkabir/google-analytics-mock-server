@@ -51,8 +51,8 @@ const generateResponse = ({ propertyId, pageSize, pageToken }) => {
     // Generate date range for mock data
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setFullYear(endDate.getFullYear() - 1); // 1 year ago
-
+    startDate.setFullYear(endDate.getFullYear() - 1); // 1 year ago  
+    
     // Generate mock data streams
     const dataStreams = Array.from({ length: endIndex - startIndex }, (_, i) => {
         const streamId = startIndex + i + 1;
@@ -62,7 +62,7 @@ const generateResponse = ({ propertyId, pageSize, pageToken }) => {
         const webStreamData = type === 'WEB_DATA_STREAM'
             ? {
                 measurementId: `G-${Math.floor(1000 + Math.random() * 9000)}${propertyId}`,
-                defaultUri: `https://example.com`,
+                defaultUri: streamId === (pageSize-1) ? `https://beehive.test/`: `https://example-${streamId}.com`,
             }
             : null;
 
@@ -83,7 +83,7 @@ const generateResponse = ({ propertyId, pageSize, pageToken }) => {
         return {
             name: `properties/${propertyId}/dataStreams/${streamId}`,
             type,
-            displayName: `Data Stream ${streamId}`,
+            displayName: `# ${streamId} Stream of Property ${propertyId}`,
             createTime: generateRandomDate(startDate, endDate),
             updateTime: generateRandomDate(startDate, endDate),
             webStreamData,
